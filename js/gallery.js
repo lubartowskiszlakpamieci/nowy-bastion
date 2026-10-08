@@ -34,7 +34,10 @@
                     <div class="gc-photo">
                         <span class="gc-rank-badge ${rankClass}">${rankLabel}</span>
                         ${soldier.died ? '<span class="gc-casualty-mark"><i class="fas fa-cross"></i></span>' : ''}
-                        <i class="fas fa-user-shield gc-photo-icon"></i>
+                        ${soldier.photo
+                            ? `<img src="${soldier.photo}" alt="${soldier.name}" class="gc-photo-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">`
+                            : ''}
+                        <i class="fas fa-user-shield gc-photo-icon" style="${soldier.photo ? 'display:none;' : ''}"></i>
                     </div>
                     <div class="gc-body">
                         <div class="gc-name">${soldier.name}</div>
@@ -69,7 +72,10 @@
 
         content.innerHTML = `
             <div class="modal-photo">
-                <i class="fas fa-user-shield"></i>
+                ${soldier.photo
+                    ? `<img src="${soldier.photo}" alt="${soldier.name}" class="modal-photo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">`
+                    : ''}
+                <i class="fas fa-user-shield" style="${soldier.photo ? 'display:none;' : ''}"></i>
             </div>
             <div class="modal-name">${soldier.name}</div>
             <div class="modal-codename">${soldier.codename}</div>
