@@ -186,7 +186,7 @@ const SOLDIERS = [
         role: 'Szef sztabu, ostatni dowódca grupy zbrojnej',
         organizations: 'NSZ-NZW → WiN',
         info: 'Ostatni dowódca zbrojnego oporu w powiecie lubartowskim. Po śmierci „Uskoka" w 1949 r. przez cztery lata samotnie kontynuował walkę. Śmiertelnie ranny podczas strzelaniny w Piaskach 10 lutego 1953 r.',
-        signature: 'IPN / Prezydent RP · Mateusz/Stitch: WIKTOR-001',
+        signature: 'IPN / Prezydent RP · : WIKTOR-001',
         archive: 'IPN; Prezydent RP 2021'
     },
     {
