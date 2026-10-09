@@ -170,7 +170,7 @@ const SOLDIERS = [
         role: 'Dowódca oddziału partyzanckiego WiN Lubartów',
         organizations: 'ZWZ-AK → WiN',
         info: 'Legendarny dowódca oddziałów partyzanckich na Lubelszczyźnie. Przez niemal dekadę prowadził walkę z komunistyczną władzą w powiecie lubartowskim. Autor pamiętnika bezcennego dla historii podziemia niepodległościowego. Zginął śmiercią samobójczą otoczony przez UB-KBW.',
-        signature: 'IPN Lu 0264/19 · Mateusz/Stitch: USKOK-001',
+        signature: 'IPN Lu 0264/19 · : USKOK-001',
         archive: 'IPN Lu 0264/19'
     },
     {
@@ -202,7 +202,7 @@ const SOLDIERS = [
         role: 'Szef sztabu oddziału Uskoka (do jesieni 1948)',
         organizations: 'AK → WiN',
         info: 'Jeden z najbliższych współpracowników „Uskoka". Przez lata był szefem sztabu oddziału. Fotografowany razem z „Uskokiem" w bunkrze w Dąbrówce wiosną 1946 r. Aresztowany w 1948 r. przez UB.',
-        signature: 'IPN Lu 20/86 · Mateusz/Stitch: BABINICZ-001',
+        signature: 'IPN Lu 20/86 · BABINICZ-001',
         archive: 'IPN Lu 20/86'
     },
     {
@@ -218,7 +218,7 @@ const SOLDIERS = [
         role: 'Dowódca zgrupowania, zwierzchnik „Uskoka"',
         organizations: 'AK → WiN',
         info: 'Bezpośredni zwierzchnik „Uskoka". We wrześniu 1947 r. mianował Brońskiego swoim następcą, dając mu zwierzchnictwo nad wszystkimi oddziałami Lubelszczyzny. Stracony w Warszawie tuż przed śmiercią samego „Uskoka".',
-        signature: 'IPN; biogram IPN · Mateusz/Stitch: ZAPORA-001',
+        signature: 'IPN; biogram IPN · : ZAPORA-001',
         archive: 'IPN – biogram'
     },
     {
@@ -234,7 +234,7 @@ const SOLDIERS = [
         role: 'Partyzant oddziału Uskoka',
         organizations: 'WiN – Obwód Lubartów',
         info: 'Jeden z młodszych żołnierzy oddziału. Pochodził ze Spiczyna. Dołączył do oddziału w 1946 r. Aresztowany przez UB w 1950 r. podczas operacji likwidacji siatek wsparcia partyzantów. Skazany na wieloletnie więzienie.',
-        signature: 'IPN Lu · Mateusz/Stitch: LALEK-002',
+        signature: 'IPN Lu · : LALEK-002',
         archive: 'IPN Lublin'
     },
     {
@@ -250,7 +250,7 @@ const SOLDIERS = [
         role: 'Partyzant, łącznik z Lubartowem',
         organizations: 'WiN – Obwód Lubartów',
         info: 'Jeden z wielu bezimiennych bohaterów oddziału. Pełnił funkcję łącznika między partyzantami w terenie a siatką wsparcia w Lubartowie. Poległ podczas obławy UB-MO w 1947 r. w okolicach Spiczyna.',
-        signature: 'IPN Lu · Mateusz/Stitch: SOM-003',
+        signature: 'IPN Lu ·  SOM-003',
         archive: 'IPN Lublin'
     },
     {
@@ -266,7 +266,7 @@ const SOLDIERS = [
         role: 'Dowódca patrolu w oddziale Uskoka',
         organizations: 'AK → WiN',
         info: 'Dowódca jednego z patroli partyzanckich w ramach oddziału „Uskoka". Urodzony w gminie Serniki. Poległ w 1948 r. podczas jednej z obław prowadzonych przez KBW i UB. Jeden ze 119 żołnierzy archiwizowanych w programie Stitch.',
-        signature: 'IPN Lu · Mateusz/Stitch: SZARY-004',
+        signature: 'IPN Lu : SZARY-004',
         archive: 'IPN Lublin'
     },
     {
@@ -282,7 +282,7 @@ const SOLDIERS = [
         role: 'Partyzant, oddziałowy kurier',
         organizations: 'WiN – Obwód Lubartów',
         info: 'Jeden z najmłodszych żołnierzy oddziału. Wstąpił w szeregi w 1945 r. mając 18 lat. Pełnił funkcję kuriera między kwaterami partyzantów. Aresztowany w 1951 r. w ramach akcji pacyfikacyjnych, skazany na 8 lat więzienia, zwolniony po październiku 1956.',
-        signature: 'IPN Lu · Mateusz/Stitch: SOKÓŁ-005',
+        signature: 'IPN Lu · : SOKÓŁ-005',
         archive: 'IPN Lublin'
     },
     {
@@ -298,7 +298,7 @@ const SOLDIERS = [
         role: 'Łączniczka, sanitariuszka oddziału',
         organizations: 'WiN – Obwód Lubartów',
         info: 'Jedna z kobiet-żołnierzy podziemia lubartowskiego. Pełniła funkcję łączniczki i sanitariuszki oddziału. Przemycała informacje i leki do leśnych kwater. Aresztowana po śmierci „Uskoka" w 1949 r. i brutally przesłuchiwana w PUBP Lubartów. Skazana na 5 lat więzienia.',
-        signature: 'IPN Lu · Mateusz/Stitch: JASKÓŁKA-006',
+        signature: 'IPN Lu · : JASKÓŁKA-006',
         archive: 'IPN Lublin'
     },
     {
@@ -314,7 +314,7 @@ const SOLDIERS = [
         role: 'Partyzant, saper oddziału',
         organizations: 'AK → WiN',
         info: 'Saper i rusznikarz oddziału. Zajmował się konserwacją broni i przygotowywaniem materiałów wybuchowych do akcji dywersyjnych. Poległ w 1946 r. podczas zasadzki MO-UB w okolicach gminy Ludwin. Syn chłopski z powiatu lubartowskiego.',
-        signature: 'IPN Lu · Mateusz/Stitch: KAMIEŃ-007',
+        signature: 'IPN Lu · : KAMIEŃ-007',
         archive: 'IPN Lublin'
     },
     {
@@ -330,7 +330,7 @@ const SOLDIERS = [
         role: 'Partyzant, strzelec wyborowy',
         organizations: 'AK → WiN',
         info: 'Znakomity strzelec, urodzony w Sernikach. Dołączył do konspiracji w 1942 r. jeszcze w ramach AK. Był znany z odwagi osobistej i umiejętności poruszania się w terenie. Poległ w czerwcu 1948 r. podczas pacyfikacji jednej z leśnych kwater przez oddział KBW.',
-        signature: 'IPN Lu · Mateusz/Stitch: ORZEŁ-008',
+        signature: 'IPN Lu · : ORZEŁ-008',
         archive: 'IPN Lublin'
     },
     {
@@ -346,7 +346,7 @@ const SOLDIERS = [
         role: 'Zastępca dowódcy patrolu',
         organizations: 'NSZ-NZW → WiN',
         info: 'Jeden z doświadczonych partyzantów, który przeszedł szlak bojowy od NSZ przez WiN. Był zastępcą dowódcy patrolu przez lata 1946–1949. Po śmierci „Uskoka" próbował utrzymać oddział w terenie, lecz aresztowanie we wrześniu 1949 r. przekreśliło te plany.',
-        signature: 'IPN Lu · Mateusz/Stitch: ŻELAZO-009',
+        signature: 'IPN Lu · : ŻELAZO-009',
         archive: 'IPN Lublin'
     }
 ];
