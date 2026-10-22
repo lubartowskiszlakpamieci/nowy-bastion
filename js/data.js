@@ -33,7 +33,7 @@ const MAP_POINTS = [
     },
     {
         id: 'kosciol-lubartow',
-        name: 'Kościół Farny Wniebowzięcia NMP',
+        name: 'Kościół Farny ',
         lat: 51.4630,
         lng: 22.6040,
         type: 'pamiec',
