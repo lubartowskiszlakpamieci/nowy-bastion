@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Szlak Mapbox — Bastion Pamięci</title>
+    <meta name="description" content="Interaktywny szlak Uskoka i Wiktora w Lubartowskiem. Przewijaj opisy, a mapa przeleci do kolejnych miejsc.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Zmienne kolorów, czcionki i motyw jasny/ciemny z całego Bastionu -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css">
+
+    <script>
+        // Ten sam zapisany motyw co na stronie głównej Bastionu (bez "mignięcia" przy ładowaniu)
+        (function(){ try { if (localStorage.getItem('bastion-theme') === 'light') document.documentElement.setAttribute('data-theme','light'); } catch(e){} })();
+    </script>
+
+    <style>
+        :root { --sz-top: 56px; --sz-side: min(460px, 42vw); --sz-map-h: 42vh; }
+        html { scroll-behavior: auto; }
+        body.szlak-page { background: var(--color-black); color: var(--color-sepia-paper); }
+
+        /* ---------- Pasek górny ---------- */
+        .sz-top { position: fixed; top: 0; left: 0; right: 0; height: var(--sz-top); z-index: 1000;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px;
+            background: var(--color-black); border-bottom: var(--border-red); }
+        .sz-back { font-family: var(--font-typewriter); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase;
+            color: var(--color-sepia-paper); text-decoration: none; padding: 8px 14px; border: 1px solid var(--color-gold);
+            transition: background .25s ease, color .25s ease; white-space: nowrap; }
+        .sz-back:hover, .sz-back:focus-visible { background: var(--color-gold); color: var(--color-black); text-decoration: none; }
+        .sz-top-title { font-family: var(--font-typewriter); letter-spacing: .25em; color: var(--color-gold); font-size: .8rem; flex: 1; text-align: center; }
+        .sz-top .theme-toggle { margin-left: 0; }
+        .sz-bar { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--color-red-accent); transition: width .5s ease; }
+
+        /* ---------- Mapa ---------- */
+        #map { position: fixed; top: var(--sz-top); bottom: 0; left: var(--sz-side); right: 0; z-index: 5; background: var(--color-charcoal); }
+        .sz-notice { position: fixed; z-index: 900; top: calc(var(--sz-top) + 10px); left: calc(var(--sz-side) + 12px); right: 12px;
+            max-width: 560px; padding: 10px 14px; font-family: var(--font-mono); font-size: .78rem; line-height: 1.5;
+            background: var(--color-charcoal); color: var(--color-sepia-paper); border: var(--border-sepia); border-left: 3px solid var(--color-gold);
+            box-shadow: var(--shadow-mid); }
+        .sz-notice[hidden] { display: none; }
+        .mapboxgl-map, .maplibregl-map { font-family: var(--font-mono); }
+        :root:not([data-theme="light"]) .szlak-fallback .maplibregl-canvas { filter: sepia(.4) brightness(.78) saturate(.8); }
+
+        /* ---------- Znaczniki ---------- */
+        .sz-pin-wrap { width: 30px; height: 30px; }
+        .sz-pin { position: relative; width: 30px; height: 30px; padding: 0; border-radius: 50%; cursor: pointer;
+            background: var(--pin, #cc0000); color: #fff; border: 2px solid rgba(255,255,255,.92);
+            font: 700 12px/1 var(--font-mono); display: grid; place-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.55); transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease; }
+        .sz-pin:hover { transform: scale(1.18); }
+        .sz-pin:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 3px; }
+        .sz-pin.is-active { transform: scale(1.5); box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 4px 14px rgba(0,0,0,.6); }
+        .sz-pin.is-active::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid var(--pin, #cc0000);
+            animation: szPulse 1.8s ease-out infinite; pointer-events: none; }
+        @keyframes szPulse { 0% { transform: scale(.7); opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
+        .sz-pin-label { position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%) scale(.67);
+            transform-origin: left center; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .35s ease;
+            font: 700 11px/1.2 var(--font-typewriter); letter-spacing: .04em; padding: 5px 9px;
+            background: var(--color-charcoal); color: var(--color-sepia-paper); border: var(--border-sepia); box-shadow: var(--shadow-mid); }
+        .sz-pin.is-active .sz-pin-label { opacity: 1; }
+
+        /* ---------- Opowieść (karty) ---------- */
+        #story { position: relative; z-index: 1; width: var(--sz-side); margin-top: var(--sz-top); padding: 0 18px 50vh;
+            background: var(--color-black); border-right: var(--border-sepia); }
+        .sz-step { min-height: 88vh; display: flex; align-items: center; }
+        .sz-card { width: 100%; padding: 22px 22px 20px; background: var(--color-charcoal); border: var(--border-sepia);
+            box-shadow: var(--shadow-light); cursor: pointer; opacity: .3; transform: translateY(22px) scale(.97); filter: saturate(.55);
+            transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1), filter .7s ease, box-shadow .7s ease, border-color .7s ease; }
+        .sz-step.is-active .sz-card { opacity: 1; transform: none; filter: none; border-color: var(--color-gold); box-shadow: var(--shadow-heavy); }
+        .sz-card:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 3px; }
+        .sz-kicker { display: flex; justify-content: space-between; gap: 10px; font-family: var(--font-mono); font-size: .72rem;
+            letter-spacing: .12em; text-transform: uppercase; color: var(--color-sepia-warm); margin-bottom: 12px; }
+        .sz-type { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em;
+            text-transform: uppercase; color: var(--color-sepia-cream); margin-bottom: 10px; }
+        .sz-type i { width: 10px; height: 10px; border-radius: 50%; background: var(--pin); display: inline-block; flex-shrink: 0; }
+        .sz-key { color: var(--color-gold); margin-left: 6px; }
+        .sz-title { font-family: var(--font-typewriter); font-weight: 400; font-size: 1.45rem; line-height: 1.25; color: var(--color-sepia-paper); margin: 0 0 10px; }
+        .sz-meta { font-family: var(--font-mono); font-size: .8rem; color: var(--color-sepia-warm); margin-bottom: 14px; line-height: 1.5; }
+        .sz-desc { font-family: var(--font-body); font-size: .95rem; line-height: 1.75; color: var(--color-sepia-paper); }
+        .sz-desc p { margin: 0 0 .8em; }
+        .sz-src { margin-top: 14px; padding-top: 10px; border-top: var(--border-sepia); font-family: var(--font-mono); font-size: .7rem; color: var(--color-sepia-warm); line-height: 1.5; }
+        .sz-hint { margin-top: 18px; font-family: var(--font-mono); font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--color-gold); }
+        .sz-legend { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 6px; font-family: var(--font-mono); font-size: .78rem; }
+        .sz-legend li { display: flex; align-items: center; gap: 9px; color: var(--color-sepia-cream); }
+        .sz-legend i { width: 11px; height: 11px; border-radius: 50%; background: var(--pin); display: inline-block; }
+        .sz-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .sz-btn { font-family: var(--font-typewriter); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; padding: 9px 14px;
+            border: 1px solid var(--color-gold); color: var(--color-sepia-paper); background: transparent; cursor: pointer; text-decoration: none; transition: background .25s, color .25s; }
+        .sz-btn:hover { background: var(--color-gold); color: var(--color-black); text-decoration: none; }
+
+        /* ---------- Telefony i małe tablety: mapa u góry, karty pod nią ---------- */
+        @media (max-width: 899px) {
+            #map { left: 0; right: 0; bottom: auto; height: var(--sz-map-h); }
+            #story { width: 100%; margin-top: calc(var(--sz-top) + var(--sz-map-h)); padding: 0 14px 60vh; border-right: 0; }
+            .sz-step { min-height: 72vh; }
+            .sz-notice { left: 10px; right: 10px; top: calc(var(--sz-top) + 8px); font-size: .72rem; }
+            .sz-title { font-size: 1.2rem; }
+            .sz-card { padding: 16px; }
+            .sz-back { font-size: .66rem; padding: 7px 10px; }
+        }
+        @media (max-width: 599px) { .sz-top-title { display: none; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sz-card, .sz-pin, .sz-pin-label, .sz-bar { transition: none; }
+            .sz-card { opacity: .6; transform: none; filter: none; }
+            .sz-step.is-active .sz-card { opacity: 1; }
+            .sz-pin.is-active::after { animation: none; }
+        }
+    </style>
+</head>
+<body class="szlak-page">
+
+    <header class="sz-top">
+        <a class="sz-back" href="index.html">&larr; POWRÓT DO BASTIONU PAMIĘCI</a>
+        <div class="sz-top-title">SZLAK MAPBOX</div>
+        <button id="szTheme" class="theme-toggle" type="button" aria-label="Przełącz motyw jasny/ciemny" title="Przełącz motyw"><span id="szThemeIcon">&#9789;</span></button>
+        <div class="sz-bar" id="szBar"></div>
+    </header>
+
+    <div id="map" role="application" aria-label="Mapa szlaku"></div>
+    <div id="mapNotice" class="sz-notice" role="status" hidden></div>
+    <main id="story" aria-label="Opis kolejnych miejsc szlaku"></main>
+    <noscript><p style="position:fixed;top:70px;left:16px;right:16px;z-index:2000;background:#fff;color:#000;padding:12px;">Ta strona wymaga włączonej obsługi JavaScript.</p></noscript>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+    <!-- Dane historyczne: ten sam plik co mapa i galeria na stronie głównej -->
+    <script src="js/data.js"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        /* ================= KONFIGURACJA ================= */
+        // >>> TU WKLEJ SWÓJ TOKEN MAPBOX (zaczyna się od "pk.") <<<
+        const MAPBOX_TOKEN = 'pk.eyJ1Ijoic3psYWtwYW1pZWNpIiwiYSI6ImNtc2Q2ajQzbTFuYm8yenF5NzlxMm94NmIifQ.onRsmrhonmqffC3GfOnYFg';
+        const STYLE = { dark: 'mapbox://styles/mapbox/dark-v11', light: 'mapbox://styles/mapbox/light-v11' };
+        const STYLE_TIMEOUT_MS = 10000;
+        const MAPLIBRE_JS  = 'https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+        const MAPLIBRE_CSS = 'https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css';
+        const FALLBACK_STYLE = { version: 8,
+            sources: {
+                base: { type: 'raster', tileSize: 256, maxzoom: 16, tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
+                        attribution: 'Kafle: Esri, HERE, Garmin, &copy; OpenStreetMap contributors' },
+                ref:  { type: 'raster', tileSize: 256, maxzoom: 16, tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'] } },
+            layers: [ { id: 'base', type: 'raster', source: 'base' }, { id: 'ref', type: 'raster', source: 'ref' } ] };
+
+        const TYPES = {
+            represje: { label: 'Miejsce represji',  color: '#cc0000' },
+            walki:    { label: 'Miejsce walki',     color: '#e8660a' },
+            bunkry:   { label: 'Bunkier / kwatera', color: '#1f8a4c' },
+            pamiec:   { label: 'Miejsce pamięci',   color: '#2f6fd6' }
+        };
+        const BEARINGS = [-24, 16, -8, 28, -18, 10];
+        const DEFAULT_CENTER = [22.61, 51.46];
+
+        /* ================= NARZĘDZIA ================= */
+        const $ = function (id) { return document.getElementById(id); };
+        const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        const isMobile = function () { return window.matchMedia('(max-width: 899px)').matches; };
+        const currentTheme = function () { return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; };
+        const POINTS = (typeof MAP_POINTS !== 'undefined' && Array.isArray(MAP_POINTS) ? MAP_POINTS : [])
+            .filter(function (p) { return isFinite(p.lat) && isFinite(p.lng); });
+        const typeOf = function (p) { return TYPES[p.type] || { label: 'Miejsce szlaku', color: '#8a6b26' }; };
+        const pad2 = function (n) { return (n < 10 ? '0' : '') + n; };
+
+        function el(tag, cls, text) {
+            const n = document.createElement(tag);
+            if (cls) n.className = cls;
+            if (text != null) n.textContent = text;   // textContent: treść z danych nigdy nie jest wstawiana jako HTML
+            return n;
+        }
+        function loadScript(src) { return new Promise(function (ok, fail) { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = fail; document.head.appendChild(s); }); }
+        function loadCss(href) { return new Promise(function (ok) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; l.onload = ok; l.onerror = ok; document.head.appendChild(l); }); }
+        function webglOK() { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; } }
+        function notice(msg) { const n = $('mapNotice'); if (!msg) { n.hidden = true; return; } n.textContent = msg; n.hidden = false; }
+
+        /* ================= KARTY (pasek boczny) ================= */
+        const total = POINTS.length;
+        const steps = [];
+        const pins = [];
+
+        function stepIntro() {
+            const s = el('section', 'sz-step'); const c = el('article', 'sz-card'); c.tabIndex = 0;
+            c.appendChild(el('div', 'sz-kicker', 'Bastion Pamięci · Szlak'));
+            c.appendChild(el('h2', 'sz-title', 'Szlakiem Uskoka i Wiktora'));
+            c.appendChild(el('p', 'sz-desc', 'Miejsca w Lubartowie i okolicach (punktów na szlaku: ' + total + '), związane z oddziałem kpt. Zdzisława Brońskiego „Uskoka” i represjami lat 1944–1953. Przewijaj opisy – mapa przeleci do kolejnego miejsca. Możesz też kliknąć pinezkę albo kartę.'));
+            const ul = el('ul', 'sz-legend');
+            Object.keys(TYPES).forEach(function (k) {
+                const li = el('li'); const i = el('i'); i.style.setProperty('--pin', TYPES[k].color);
+                li.appendChild(i); li.appendChild(document.createTextNode(TYPES[k].label)); ul.appendChild(li);
+            });
+            c.appendChild(ul);
+            c.appendChild(el('div', 'sz-hint', 'Przewiń w dół ↓'));
+            s.appendChild(c); return s;
+        }
+        function stepPoint(p, i) {
+            const t = typeOf(p);
+            const s = el('section', 'sz-step'); const c = el('article', 'sz-card'); c.tabIndex = 0;
+            const k = el('div', 'sz-kicker'); k.appendChild(el('span', null, pad2(i + 1) + ' / ' + pad2(total))); k.appendChild(el('span', null, p.date || ''));
+            c.appendChild(k);
+            const ty = el('div', 'sz-type'); const dot = el('i'); dot.style.setProperty('--pin', t.color);
+            ty.appendChild(dot); ty.appendChild(document.createTextNode(t.label));
+            if (p.importance === 'high') ty.appendChild(el('span', 'sz-key', '★ kluczowe'));
+            c.appendChild(ty);
+            c.appendChild(el('h2', 'sz-title', p.name || ''));
+            if (p.address) c.appendChild(el('div', 'sz-meta', '📍 ' + p.address));
+            const d = el('div', 'sz-desc');
+            String(p.description || '').split(/\n+/).filter(Boolean).forEach(function (para) { d.appendChild(el('p', null, para)); });
+            c.appendChild(d);
+            if (p.source) c.appendChild(el('div', 'sz-src', 'Źródło: ' + p.source));
+            s.appendChild(c); return s;
+        }
+        function stepOutro() {
+            const s = el('section', 'sz-step'); const c = el('article', 'sz-card'); c.tabIndex = 0;
+            c.appendChild(el('div', 'sz-kicker', 'Koniec szlaku'));
+            c.appendChild(el('h2', 'sz-title', 'Pamiętamy'));
+            c.appendChild(el('p', 'sz-desc', 'To nie wszystkie miejsca. W Bastionie Pamięci znajdziesz sylwetki 119 żołnierzy oddziału oraz materiały źródłowe.'));
+            const a = el('div', 'sz-actions');
+            const top = el('button', 'sz-btn', '↑ Wróć na początek'); top.type = 'button';
+            top.addEventListener('click', function (e) { e.stopPropagation(); activate(0, { scroll: true }); });
+            const back = el('a', 'sz-btn', '← Powrót do Bastionu Pamięci'); back.href = 'index.html';
+            a.appendChild(top); a.appendChild(back); c.appendChild(a);
+            s.appendChild(c); return s;
+        }
+        function buildStory() {
+            const story = $('story');
+            steps.push(stepIntro());
+            POINTS.forEach(function (p, i) { steps.push(stepPoint(p, i)); });
+            steps.push(stepOutro());
+            steps.forEach(function (s, i) {
+                s.dataset.step = String(i);
+                const card = s.firstChild;
+                card.addEventListener('click', function () { activate(i, { scroll: needsScroll(i) }); });
+                card.addEventListener('keydown', function (e) { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); activate(i, { scroll: true }); } });
+                story.appendChild(s);
+            });
+        }
+
+        /* ================= ZNACZNIKI ================= */
+        function buildPins() {
+            POINTS.forEach(function (p, i) {
+                const wrap = el('div', 'sz-pin-wrap');          // Mapbox przesuwa wrapper (transform), a skalujemy przycisk w środku
+                const btn = el('button', 'sz-pin'); btn.type = 'button';
+                btn.style.setProperty('--pin', typeOf(p).color);
+                btn.setAttribute('aria-label', (i + 1) + '. ' + (p.name || 'punkt szlaku'));
+                btn.appendChild(el('span', null, String(i + 1)));
+                btn.appendChild(el('span', 'sz-pin-label', p.name || ''));
+                btn.addEventListener('click', function (e) { e.stopPropagation(); activate(i + 1, { scroll: true }); });
+                wrap.appendChild(btn);
+                pins.push({ wrap: wrap, btn: btn, marker: null });
+            });
+        }
+
+        /* ================= MAPA ================= */
+        let GL = null, map = null, engine = 'none', styleReady = false;
+        function createMarkers() {
+            pins.forEach(function (pin, i) {
+                pin.marker = new GL.Marker({ element: pin.wrap, anchor: 'center' }).setLngLat([POINTS[i].lng, POINTS[i].lat]).addTo(map);
+            });
+        }
+        function teardown() {
+            pins.forEach(function (pin) { if (pin.marker) { try { pin.marker.remove(); } catch (e) {} pin.marker = null; } });
+            if (map) { try { map.remove(); } catch (e) {} map = null; }
+        }
+        function add3d() {
+            try {
+                if (!map || map.getLayer('sz-3d')) return;
+                const layers = map.getStyle().layers || [];
+                const label = layers.find(function (l) { return l.type === 'symbol' && l.layout && l.layout['text-field']; });
+                map.addLayer({ id: 'sz-3d', source: 'composite', 'source-layer': 'building', filter: ['==', 'extrude', 'true'], type: 'fill-extrusion', minzoom: 14.5,
+                    paint: { 'fill-extrusion-color': currentTheme() === 'dark' ? '#3a2f24' : '#cdbf9f', 'fill-extrusion-height': ['get', 'height'],
+                             'fill-extrusion-base': ['get', 'min_height'], 'fill-extrusion-opacity': 0.6 } }, label && label.id);
+            } catch (e) { /* styl bez warstwy budynków – pomijamy 3D */ }
+        }
+        function wireMap(withBuildings) {
+            map.addControl(new GL.NavigationControl({ visualizePitch: true }), 'top-right');
+            map.on('style.load', function () { styleReady = true; if (withBuildings) add3d(); });
+            createMarkers();
+            goTo(current < 0 ? 0 : current, true);
+        }
+        function startMapbox() {
+            GL = window.mapboxgl; GL.accessToken = MAPBOX_TOKEN; engine = 'mapbox'; styleReady = false;
+            map = new GL.Map({ container: 'map', style: STYLE[currentTheme()], center: DEFAULT_CENTER, zoom: 11, pitch: 0, bearing: 0 });
+            map.on('error', function (e) {
+                const st = e && e.error && e.error.status;
+                if (engine === 'mapbox' && !styleReady && (st === 401 || st === 403 || st === 404)) startFallback('Mapbox odrzucił token (HTTP ' + st + ').');
+            });
+            wireMap(true);
+            setTimeout(function () { if (engine === 'mapbox' && !styleReady) startFallback('Mapbox nie odpowiedział w ciągu 10 s (sprawdź token i ograniczenia URL).'); }, STYLE_TIMEOUT_MS);
+        }
+        function startFallback(reason) {
+            if (engine === 'maplibre') return;
+            engine = 'maplibre';
+            notice(reason + ' Wyświetlam mapę zapasową (bez widoku 3D).');
+            teardown();
+            document.body.classList.add('szlak-fallback');
+            Promise.all([loadCss(MAPLIBRE_CSS), loadScript(MAPLIBRE_JS)]).then(function () {
+                GL = window.maplibregl;
+                map = new GL.Map({ container: 'map', style: FALLBACK_STYLE, center: DEFAULT_CENTER, zoom: 11, pitch: 0, bearing: 0 });
+                wireMap(false);
+            }).catch(function () { engine = 'none'; notice('Nie udało się wczytać mapy. Opisy miejsc nadal możesz czytać.'); });
+        }
+        function initMap() {
+            if (!webglOK()) { notice('Ta przeglądarka nie obsługuje WebGL – mapa jest niedostępna, ale opisy możesz czytać.'); return; }
+            if (window.mapboxgl && typeof MAPBOX_TOKEN === 'string' && MAPBOX_TOKEN.indexOf('pk.') === 0) {
+                try { startMapbox(); return; } catch (e) { /* przechodzimy do mapy zapasowej */ }
+            }
+            startFallback('Brak biblioteki Mapbox lub tokenu.');
+        }
+
+        /* ================= KAMERA ================= */
+        function overview() {
+            const fallbackCam = { center: DEFAULT_CENTER, zoom: 11, pitch: 0, bearing: 0 };
+            if (!POINTS.length || !map) return fallbackCam;
+            try {
+                const b = new GL.LngLatBounds();
+                POINTS.forEach(function (p) { b.extend([p.lng, p.lat]); });
+                const pad = isMobile() ? { top: 40, bottom: 40, left: 30, right: 30 } : { top: 70, bottom: 50, left: 50, right: 50 };
+                const cam = map.cameraForBounds(b, { padding: pad, maxZoom: 13 });
+                if (cam) return { center: cam.center, zoom: cam.zoom, pitch: 0, bearing: 0 };
+            } catch (e) {}
+            return fallbackCam;
+        }
+        function cameraFor(i) {
+            if (i <= 0 || i > total) return overview();
+            const p = POINTS[i - 1];
+            return { center: [p.lng, p.lat],
+                     zoom: (p.zoom != null ? p.zoom : (p.importance === 'high' ? 16.8 : 16.2)) - (isMobile() ? 0.4 : 0),
+                     pitch: p.pitch != null ? p.pitch : (isMobile() ? 48 : 58),
+                     bearing: p.bearing != null ? p.bearing : BEARINGS[(i - 1) % BEARINGS.length] };
+        }
+        function goTo(i, instant) {
+            if (!map) return;
+            const cam = cameraFor(i);
+            try {
+                if (instant || reduceMotion) map.jumpTo(cam);
+                else map.flyTo(Object.assign({ speed: 0.85, curve: 1.45, essential: false }, cam));
+            } catch (e) {}
+        }
+
+        /* ================= AKTYWNY KROK, PRZEWIJANIE, OBSERVER ================= */
+        let current = -1, lock = false, lockTimer = null, io = null, raf = 0;
+
+        function paint() {
+            steps.forEach(function (s, k) { s.classList.toggle('is-active', k === current); if (k === current) s.firstChild.setAttribute('aria-current', 'true'); else s.firstChild.removeAttribute('aria-current'); });
+            pins.forEach(function (pin, k) { pin.btn.classList.toggle('is-active', k + 1 === current); pin.wrap.style.zIndex = (k + 1 === current) ? '5' : ''; });
+            $('szBar').style.width = (steps.length > 1 ? Math.round(Math.max(current, 0) / (steps.length - 1) * 100) : 0) + '%';
+        }
+        function activate(i, o) {
+            o = o || {};
+            if (i < 0 || i >= steps.length) return;
+            if (i !== current) { current = i; paint(); goTo(i); }
+            if (o.scroll) scrollToStep(i);
+        }
+        function topInset() { return isMobile() ? $('map').getBoundingClientRect().bottom : document.querySelector('.sz-top').offsetHeight; }
+        function bandCenter() { const top = topInset(); const vis = window.innerHeight - top; return top + vis * 0.45; }
+        function needsScroll(i) { const r = steps[i].getBoundingClientRect(); return Math.abs((r.top + r.height / 2) - bandCenter()) > 60; }
+        function unlock() { lock = false; clearTimeout(lockTimer); evaluate(); }
+        function scrollToStep(i) {
+            const r = steps[i].getBoundingClientRect();
+            const target = Math.max(0, window.scrollY + r.top + r.height / 2 - bandCenter());
+            lock = true; clearTimeout(lockTimer); lockTimer = setTimeout(unlock, 1200);   // zabezpieczenie, gdy nie ma co przewijać
+            window.scrollTo({ top: target, behavior: reduceMotion ? 'auto' : 'smooth' });
+        }
+        function evaluate() {
+            if (lock) return;
+            const line = bandCenter(); let best = 0, bestD = Infinity;
+            steps.forEach(function (s, i) {
+                const r = s.getBoundingClientRect();
+                const d = (r.top <= line && r.bottom >= line) ? 0 : Math.min(Math.abs(r.top - line), Math.abs(r.bottom - line));
+                if (d < bestD) { bestD = d; best = i; }
+            });
+            activate(best);
+        }
+        window.addEventListener('scroll', function () {      // gdy przewijanie ustanie na 160 ms – zwalniamy blokadę
+            if (lock) { clearTimeout(lockTimer); lockTimer = setTimeout(unlock, 160); }
+        }, { passive: true });
+        function schedule() { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; evaluate(); }); }
+        function setupObserver() {
+            if (io) io.disconnect();
+            const top = topInset(), vis = window.innerHeight - top;
+            const topMargin = Math.round(top + vis * 0.30);                           // pasmo "aktywne" zaczyna się 30% pod mapą/paskiem
+            const bottomMargin = Math.round(window.innerHeight - (top + vis * 0.60));  // i kończy na 60% widocznej wysokości
+            io = new IntersectionObserver(schedule, { rootMargin: '-' + topMargin + 'px 0px -' + bottomMargin + 'px 0px', threshold: 0 });
+            steps.forEach(function (s) { io.observe(s); });
+        }
+
+        /* ================= MOTYW ================= */
+        function setupTheme() {
+            const btn = $('szTheme'), icon = $('szThemeIcon');
+            const sync = function () { const light = currentTheme() === 'light'; icon.innerHTML = light ? '&#9788;' : '&#9789;'; btn.title = light ? 'Przełącz na motyw ciemny' : 'Przełącz na motyw jasny'; };
+            sync();
+            btn.addEventListener('click', function () {
+                if (currentTheme() === 'light') { document.documentElement.removeAttribute('data-theme'); try { localStorage.setItem('bastion-theme', 'dark'); } catch (e) {} }
+                else { document.documentElement.setAttribute('data-theme', 'light'); try { localStorage.setItem('bastion-theme', 'light'); } catch (e) {} }
+                sync();
+                if (engine === 'mapbox' && map) { try { map.setStyle(STYLE[currentTheme()]); } catch (e) {} }
+            });
+        }
+
+        /* ================= START ================= */
+        buildStory();
+        buildPins();
+        setupTheme();
+        initMap();
+        setupObserver();
+        evaluate();
+        let rt = null;
+        window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (map) map.resize(); setupObserver(); evaluate(); }, 150); });
+    })();
+    </script>
+</body>
+</html>
