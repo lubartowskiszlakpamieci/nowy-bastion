@@ -141,13 +141,11 @@
         const STYLE_TIMEOUT_MS = 10000;
         const MAPLIBRE_JS  = 'https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js';
         const MAPLIBRE_CSS = 'https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css';
-        const FALLBACK_STYLE = { version: 8,
+       const FALLBACK_STYLE = { version: 8,
             sources: {
-                base: { type: 'raster', tileSize: 256, maxzoom: 16, tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
-                        attribution: 'Kafle: Esri, HERE, Garmin, &copy; OpenStreetMap contributors' },
-                ref:  { type: 'raster', tileSize: 256, maxzoom: 16, tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'] } },
-            layers: [ { id: 'base', type: 'raster', source: 'base' }, { id: 'ref', type: 'raster', source: 'ref' } ] };
-
+                base: { type: 'raster', tileSize: 256, maxzoom: 19, tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        attribution: '&copy; OpenStreetMap contributors' } },
+            layers: [ { id: 'base', type: 'raster', source: 'base' } ] };
         const TYPES = {
             represje: { label: 'Miejsce represji',  color: '#cc0000' },
             walki:    { label: 'Miejsce walki',     color: '#e8660a' },
