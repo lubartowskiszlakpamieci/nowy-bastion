@@ -1,0 +1,100 @@
+media:
+  input: images
+  output: /images
+
+content:
+  - name: panteon
+    label: Panteon Bohaterów
+    type: collection
+    path: content/panteon
+    filename: "{primary}.md"
+    fields:
+      - name: title
+        label: Imię i nazwisko
+        type: string
+      - name: pseudonym
+        label: Pseudonim
+        type: string
+      - name: group
+        label: Grupa
+        type: string
+      - name: biography
+        label: Biografia
+        type: rich-text
+      - name: image
+        label: Zdjęcie portretowe
+        type: image
+
+  - name: mapa
+    label: Mapa Szlaku
+    type: collection
+    path: content/mapa
+    filename: "{primary}.md"
+    fields:
+      - name: title
+        label: Nazwa punktu
+        type: string
+      - name: era
+        label: Epoka historyczna
+        type: string
+      - name: lat
+        label: Szerokość geograficzna
+        type: number
+      - name: lng
+        label: Długość geograficzna
+        type: number
+      - name: desc
+        label: Opis historyczny
+        type: rich-text
+
+  - name: nekropolia
+    label: Nekropolia
+    type: collection
+    path: content/nekropolia
+    filename: "{primary}.md"
+    fields:
+      - name: id_mogily
+        label: Identyfikator mogiły
+        type: string
+      - name: nazwa
+        label: Nazwa obiektu
+        type: string
+      - name: sektor
+        label: Sektor
+        type: string
+      - name: kwatera
+        label: Kwatera
+        type: string
+      - name: profil
+        label: Profil historyczny
+        type: rich-text
+      - name: pochowani
+        label: Osoby pochowane
+        type: string
+        list: true
+      - name: lat
+        label: Szerokość geograficzna
+        type: number
+      - name: lng
+        label: Długość geograficzna
+        type: number
+
+  - name: ksiega
+    label: Księga Hołdu
+    type: collection
+    path: content/ksiega
+    filename: "{primary}.md"
+    fields:
+      - name: osoba
+        label: Autor wpisu
+        type: string
+      - name: instytucja
+        label: Instytucja
+        type: string
+      - name: tresc
+        label: Treść wpisu
+        type: rich-text
+      - name: hold
+        label: Opublikuj
+        type: boolean
+        default: true
