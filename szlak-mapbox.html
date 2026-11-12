@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com/css2?family=Special+Elite&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Zmienne kolorów, czcionki i motyw jasny/ciemny z całego Bastionu -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://mapbox.com">
 
@@ -19,7 +18,6 @@
     </script>
 
     <style>
-        /* Zabezpieczenie zmiennych na wypadek uruchomienia bez css/style.css */
         :root {
             --color-black: #0f0d0c;
             --color-charcoal: #1a1715;
@@ -52,79 +50,347 @@
         html { scroll-behavior: smooth; }
         body.szlak-page { margin: 0; background: var(--color-black); color: var(--color-sepia-paper); }
 
-        /* ---------- Pasek górny ---------- */
         .sz-top { position: fixed; top: 0; left: 0; right: 0; height: var(--sz-top); z-index: 1000;
             display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px;
             background: var(--color-black); border-bottom: var(--border-red); }
         .sz-back { font-family: var(--font-typewriter); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase;
             color: var(--color-sepia-paper); text-decoration: none; padding: 8px 14px; border: 1px solid var(--color-gold);
             transition: background .25s ease, color .25s ease; white-space: nowrap; }
-        .sz-back:hover, .sz-back:focus-visible { background: var(--color-gold); color: var(--color-black); text-decoration: none; }
+        .sz-back:hover { background: var(--color-gold); color: var(--color-black); text-decoration: none; }
         .sz-top-title { font-family: var(--font-typewriter); letter-spacing: .25em; color: var(--color-gold); font-size: .8rem; flex: 1; text-align: center; }
         .sz-theme-btn { background: transparent; border: 1px solid var(--color-sepia-warm); color: var(--color-sepia-paper);
             padding: 6px 10px; cursor: pointer; font-family: var(--font-mono); font-size: .8rem; }
         .sz-bar { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--color-red-accent); transition: width .3s ease; }
 
-        /* ---------- Mapa ---------- */
         #map { position: fixed; top: var(--sz-top); bottom: 0; left: var(--sz-side); right: 0; z-index: 5; background: var(--color-charcoal); }
         .sz-notice { position: fixed; z-index: 900; top: calc(var(--sz-top) + 10px); left: calc(var(--sz-side) + 12px); right: 12px;
             max-width: 560px; padding: 10px 14px; font-family: var(--font-mono); font-size: .78rem; line-height: 1.5;
             background: var(--color-charcoal); color: var(--color-sepia-paper); border: var(--border-sepia); border-left: 3px solid var(--color-gold);
             box-shadow: var(--shadow-mid); }
         .sz-notice[hidden] { display: none; }
-        .mapboxgl-map { font-family: var(--font-mono); }
 
-        /* ---------- Znaczniki ---------- */
         .sz-pin-wrap { width: 30px; height: 30px; }
         .sz-pin { position: relative; width: 30px; height: 30px; padding: 0; border-radius: 50%; cursor: pointer;
             background: var(--pin, #cc0000); color: #fff; border: 2px solid rgba(255,255,255,.92);
             font: 700 12px/1 var(--font-mono); display: grid; place-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,.55); transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease; }
+            box-shadow: 0 2px 8px rgba(0,0,0,.55); transition: transform .4s cubic-bezier(.2,.8,.2,1); }
         .sz-pin:hover { transform: scale(1.18); }
         .sz-pin.is-active { transform: scale(1.5); box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 4px 14px rgba(0,0,0,.6); z-index: 10; }
-        .sz-pin.is-active::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid var(--pin, #cc0000);
-            animation: szPulse 1.8s ease-out infinite; pointer-events: none; }
-        @keyframes szPulse { 0% { transform: scale(.7); opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
         .sz-pin-label { position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%) scale(.75);
             transform-origin: left center; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .35s ease;
             font: 700 11px/1.2 var(--font-typewriter); letter-spacing: .04em; padding: 5px 9px;
-            background: var(--color-charcoal); color: var(--color-sepia-paper); border: var(--border-sepia); box-shadow: var(--shadow-mid); }
+            background: var(--color-charcoal); color: var(--color-sepia-paper); border: var(--border-sepia); }
         .sz-pin.is-active .sz-pin-label { opacity: 1; }
 
-        /* ---------- Opowieść (karty) ---------- */
         #story { position: relative; z-index: 10; width: var(--sz-side); margin-top: var(--sz-top); padding: 20px 18px 45vh;
             background: var(--color-black); border-right: var(--border-sepia); box-sizing: border-box; }
         .sz-step { min-height: 82vh; display: flex; align-items: center; padding: 16px 0; }
         .sz-card { width: 100%; padding: 22px 22px 20px; background: var(--color-charcoal); border: var(--border-sepia);
             box-shadow: var(--shadow-light); cursor: pointer; opacity: .35; transform: translateY(18px) scale(.98);
-            transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1), box-shadow .6s ease, border-color .6s ease; }
+            transition: opacity .6s ease, transform .6s ease, border-color .6s ease; }
         .sz-step.is-active .sz-card { opacity: 1; transform: none; border-color: var(--color-gold); box-shadow: var(--shadow-heavy); }
-        .sz-kicker { display: flex; justify-content: space-between; gap: 10px; font-family: var(--font-mono); font-size: .72rem;
+        .sz-kicker { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: .72rem;
             letter-spacing: .12em; text-transform: uppercase; color: var(--color-sepia-warm); margin-bottom: 12px; }
-        .sz-type { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em;
+        .sz-type { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: .7rem;
             text-transform: uppercase; color: var(--color-sepia-cream); margin-bottom: 10px; }
-        .sz-type i { width: 10px; height: 10px; border-radius: 50%; background: var(--pin); display: inline-block; flex-shrink: 0; }
-        .sz-title { font-family: var(--font-typewriter); font-weight: 400; font-size: 1.4rem; line-height: 1.25; color: var(--color-sepia-paper); margin: 0 0 10px; }
-        .sz-meta { font-family: var(--font-mono); font-size: .78rem; color: var(--color-sepia-warm); margin-bottom: 14px; line-height: 1.5; }
-        .sz-desc { font-family: var(--font-body); font-size: .92rem; line-height: 1.7; color: var(--color-sepia-paper); }
+        .sz-type i { width: 10px; height: 10px; border-radius: 50%; background: var(--pin); display: inline-block; }
+        .sz-title { font-family: var(--font-typewriter); font-weight: 400; font-size: 1.4rem; line-height: 1.25; margin: 0 0 10px; }
+        .sz-meta { font-family: var(--font-mono); font-size: .78rem; color: var(--color-sepia-warm); margin-bottom: 14px; }
+        .sz-desc { font-family: var(--font-body); font-size: .92rem; line-height: 1.7; }
         .sz-desc p { margin: 0 0 .8em; }
-        .sz-src { margin-top: 14px; padding-top: 10px; border-top: var(--border-sepia); font-family: var(--font-mono); font-size: .7rem; color: var(--color-sepia-warm); line-height: 1.5; }
-        .sz-hint { margin-top: 16px; font-family: var(--font-mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--color-gold); }
+        .sz-src { margin-top: 14px; padding-top: 10px; border-top: var(--border-sepia); font-family: var(--font-mono); font-size: .7rem; color: var(--color-sepia-warm); }
+        .sz-hint { margin-top: 16px; font-family: var(--font-mono); font-size: .75rem; text-transform: uppercase; color: var(--color-gold); }
         .sz-legend { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 6px; font-family: var(--font-mono); font-size: .78rem; }
-        .sz-legend li { display: flex; align-items: center; gap: 9px; color: var(--color-sepia-cream); }
+        .sz-legend li { display: flex; align-items: center; gap: 9px; }
         .sz-legend i { width: 11px; height: 11px; border-radius: 50%; background: var(--pin); display: inline-block; }
 
-        /* ---------- Dokończona klasa przycisków (.sz-btn) ---------- */
         .sz-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
         .sz-btn { font-family: var(--font-typewriter); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase;
             padding: 9px 14px; border: 1px solid var(--color-gold); background: transparent; color: var(--color-sepia-paper);
-            text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-            transition: background .25s ease, color .25s ease; }
+            text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
         .sz-btn:hover { background: var(--color-gold); color: var(--color-black); }
         .sz-btn-gps { border-color: var(--color-red-accent); background: rgba(158, 42, 43, 0.2); }
         .sz-btn-gps:hover { background: var(--color-red-accent); color: #fff; }
 
-        /* ---------- Widok mobilny (smartfony) ---------- */
         @media (max-width: 820px) {
             #map { left: 0; right: 0; height: var(--sz-map-h); bottom: auto; border-bottom: var(--border-red); }
             #story { width: 100%; margin-top: calc(var(--sz-top) + var(--sz-map-h)); border-right: none; padding-bottom: 30vh; }
+            .sz-step { min-height: 55vh; }
+            .sz-top-title { letter-spacing: .1em; font-size: .72rem; }
+            .sz-notice { left: 12px; }
+        }
+    </style>
+</head>
+<body class="szlak-page">
+
+    <header class="sz-top">
+        <a href="index.html" class="sz-back">← Bastion Pamięci</a>
+        <div class="sz-top-title">SZLAK OPERACYJNY · 1944–1953</div>
+        <button id="themeBtn" class="sz-theme-btn" title="Zmień motyw">☽ / ☀</button>
+        <div class="sz-bar" id="progressBar"></div>
+    </header>
+
+    <div id="tokenNotice" class="sz-notice" hidden>
+        ⚠️ <strong>Brak tokena Mapbox Studio:</strong> Wklej swój klucz <code>pk.eyJ1...</code> w miejsce <code>TWÓJ_TOKEN_MAPBOX_TUTAJ</code>.
+    </div>
+
+    <div id="map"></div>
+    <main id="story"></main>
+
+    <script src="https://mapbox.com"></script>
+    <script>
+        // =====================================================================
+        // TUTAJ WKLEJ SWÓJ TOKEN Z MAPBOX STUDIO (zaczyna się od pk.eyJ1...)
+        // =====================================================================
+        const MAPBOX_TOKEN = 'TWÓJ_TOKEN_MAPBOX_TUTAJ';
+
+        const etapySzlaku = [
+            {
+                numer: 'ARCHIWUM · 1944–1953',
+                kategoria: 'Wprowadzenie operacyjne',
+                kolor: '#c5a059',
+                tytul: 'Szlakiem „Uskoka” i „Wiktora”',
+                meta: 'Powiat Lubartów · Obwód WiN „Leontyna”',
+                opis: '<p>Przewijaj kolejne karty opowieści, aby prześledzić losy 119 żołnierzy oddziału kpt. Zdzisława Brońskiego „Uskoka” oraz jego następcy ppor. Stanisława Kuchciewicza „Wiktora”.</p><p>Mapa automatycznie przeniesie Cię w miejsca bitew, katowni bezpieki oraz ukrytych bunkrów leśnych na ziemi lubartowskiej.</p>',
+                zrodlo: 'Źródło: Archiwum IPN Lublin · Pamiętnik kpt. Zdzisława Brońskiego „Uskoka”',
+                coords: [22.68, 51.40],
+                zoom: 10.2,
+                pitch: 30,
+                bearing: 0,
+                isIntro: true
+            },
+            {
+                numer: 'PUNKT 01 / 07',
+                kategoria: 'Miejsce represji (1944–1956)',
+                kolor: '#cc0000',
+                tytul: 'Siedziba PUBP w Lubartowie',
+                meta: 'Al. 1000-lecia 4, Lubartów · 51.4610°N, 22.6065°E',
+                opis: '<p>Główny ośrodek komunistycznego terroru w powiecie lubartowskim. Przez tutejsze piwnice i pokoje przesłuchań przeszły setki żołnierzy AK, WiN oraz mieszkańców podejrzewanych o wspieranie partyzantki.</p>',
+                zrodlo: 'Sygn. IPN Lu 0264/19 · Śladami Zbrodni IPN',
+                coords: [22.6065, 51.4610],
+                zoom: 16.2,
+                pitch: 55,
+                bearing: -20
+            },
+            {
+                numer: 'PUNKT 02 / 07',
+                kategoria: 'Miejsce pamięci',
+                kolor: '#2b6cb0',
+                tytul: 'Bazylika św. Anny (Kościół Farny)',
+                meta: 'ul. Słowackiego 6, Lubartów · 51.4621°N, 22.6068°E',
+                opis: '<p>Duchowa ostoja konspiracji niepodległościowej w Lubartowie. Miejsce modlitwy rodzin prześladowanych partyzantów oraz tablic upamiętniających żołnierzy Armii Krajowej i podziemia powojennego.</p>',
+                zrodlo: 'Archiwum Parafialne · Lubartowski Szlak Pamięci',
+                coords: [22.6068, 51.4621],
+                zoom: 16.5,
+                pitch: 50,
+                bearing: 25
+            },
+            {
+                numer: 'PUNKT 03 / 07',
+                kategoria: 'Miejsce pamięci i konspiracji',
+                kolor: '#2b6cb0',
+                tytul: 'Radzic Stary — gniazdo „Uskoka”',
+                meta: 'Stary Radzic, gm. Ludwin · 51.3728°N, 22.8236°E',
+                opis: '<p>Miejsce urodzenia Zdzisława Brońskiego (24 grudnia 1912 r.). Po ucieczce z niemieckiej niewoli w 1940 r. zorganizował tu placówkę ZWZ-AK nr XIVa, rozpoczynając swoją nieprzerwaną walkę o niepodległość.</p>',
+                zrodlo: 'Monografia: A. Piekarz, Kpt. Zdzisław Broński „Uskok” 1912–1949',
+                coords: [22.82361, 51.37278],
+                zoom: 14.5,
+                pitch: 45,
+                bearing: 10
+            },
+            {
+                numer: 'PUNKT 04 / 07',
+                kategoria: 'Miejsce walk i kwatera',
+                kolor: '#dd6b20',
+                tytul: 'Zezulin — bitwy i dekonspiracja',
+                meta: 'Zezulin, gm. Ludwin · 51.3800°N, 22.8300°E',
+                opis: '<p>Teren zaciętych walk oddziału „Uskoka” z grupami operacyjnymi NKWD w 1944 roku oraz miejsce dramatycznej obławy na kwaterze w październiku 1951 roku, która doprowadziła do dekonspiracji siatki wsparcia.</p>',
+                zrodlo: 'Sygn. IPN Lu 0136/2 · Charakterystyka oddziału „Uskoka”',
+                coords: [22.8300, 51.3800],
+                zoom: 14.5,
+                pitch: 45,
+                bearing: -15
+            },
+            {
+                numer: 'PUNKT 05 / 07',
+                kategoria: 'Bunkry / ostatnia reduta',
+                kolor: '#2f855a',
+                tytul: 'Dąbrówka (Nowogród) — Bunkier „Uskoka”',
+                meta: 'Nowogród, gm. Ludwin · 51.3500°N, 22.8500°E',
+                opis: '<p>21 maja 1949 r. otoczony w ukrytym bunkrze pod budynkiem gospodarczym przez przeważające siły UB-KBW-MO, kpt. Zdzisław Broński zdetonował granat, wybierając śmierć żołnierską zamiast niewoli.</p>',
+                zrodlo: 'Przystanek Historia IPN · Ekshumacja 2013 r.',
+                coords: [22.8500, 51.3500],
+                zoom: 15.2,
+                pitch: 55,
+                bearing: 35
+            },
+            {
+                numer: 'PUNKT 06 / 07',
+                kategoria: 'Miejsce pamięci',
+                kolor: '#2b6cb0',
+                tytul: 'Łęczna — rodzinne miasto „Wiktora”',
+                meta: 'Łęczna · 51.2999°N, 22.8807°E',
+                opis: '<p>Tu 27 grudnia 1922 r. urodził się Adam Stanisław Kuchciewicz „Wiktor”. Doświadczony partyzant NSZ-NZW, a od 1946 r. prawa ręka i szef sztabu kpt. „Uskoka”.</p>',
+                zrodlo: 'Archiwum IPN · Podziemie Zbrojne na Lubelszczyźnie',
+                coords: [22.8807, 51.2999],
+                zoom: 14.5,
+                pitch: 45,
+                bearing: 0
+            },
+            {
+                numer: 'PUNKT 07 / 07',
+                kategoria: 'Miejsce ostatniej walki (1953)',
+                kolor: '#dd6b20',
+                tytul: 'Piaski — śmierć ppor. „Wiktora”',
+                meta: 'Piaski · 51.1806°N, 22.9074°E',
+                opis: '<p>10 lutego 1953 r. w budynku Gminnej Kasy Spółdzielczej rozegrała się ostatnia bitwa oddziału. Śmiertelnie ranny ppor. Stanisław Kuchciewicz „Wiktor” poległ jako jeden z ostatnich dowódców podziemia na Lubelszczyźnie.</p>',
+                zrodlo: 'Meldunek PUBP 1952/1953 · Koniec zorganizowanego oporu',
+                coords: [22.9074, 51.1806],
+                zoom: 15.5,
+                pitch: 55,
+                bearing: -30
+            }
+        ];
+
+        const storyContainer = document.getElementById('story');
+
+        etapySzlaku.forEach((etap, index) => {
+            const step = document.createElement('section');
+            step.className = 'sz-step' + (index === 0 ? ' is-active' : '');
+            step.dataset.index = index;
+
+            let legendaHTML = '';
+            let przyciskGPS = '';
+
+            if (etap.isIntro) {
+                legendaHTML = `
+                    <ul class="sz-legend">
+                        <li><i style="--pin:#cc0000"></i> Miejsca represji UB / NKWD</li>
+                        <li><i style="--pin:#dd6b20"></i> Miejsca bitew i potyczek</li>
+                        <li><i style="--pin:#2f855a"></i> Bunkry i kwatery polowe</li>
+                        <li><i style="--pin:#2b6cb0"></i> Miejsca pamięci i biogramy</li>
+                    </ul>
+                    <div class="sz-hint">↓ Przewiń w dół, aby rozpocząć przelot</div>
+                `;
+            } else {
+                const googleMapsUrl = `https://google.com{etap.coords[1]},${etap.coords[0]}`;
+                przyciskGPS = `
+                    <div class="sz-actions">
+                        <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="sz-btn sz-btn-gps">
+                            📍 Nawiguj do punktu (GPS)
+                        </a>
+                    </div>
+                `;
+            }
+
+            step.innerHTML = `
+                <article class="sz-card" tabindex="0">
+                    <div class="sz-kicker">
+                        <span>${etap.numer}</span>
+                        <span>${etap.coords[1].toFixed(4)}°N</span>
+                    </div>
+                    <div class="sz-type"><i style="--pin:${etap.kolor}"></i> ${etap.kategoria}</div>
+                    <h2 class="sz-title">${etap.tytul}</h2>
+                    <div class="sz-meta">${etap.meta}</div>
+                    <div class="sz-desc">${etap.opis}</div>
+                    ${legendaHTML}
+                    ${przyciskGPS}
+                    <div class="sz-src">${etap.zrodlo}</div>
+                </article>
+            `;
+            storyContainer.appendChild(step);
+        });
+
+        const notice = document.getElementById('tokenNotice');
+        let map = null;
+        const markery = [];
+
+        if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'TWÓJ_TOKEN_MAPBOX_TUTAJ') {
+            notice.hidden = false;
+        } else {
+            mapboxgl.accessToken = MAPBOX_TOKEN;
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const stylMapy = isLight ? 'mapbox://styles/mapbox/outdoors-v12' : 'mapbox://styles/mapbox/dark-v11';
+
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: stylMapy,
+                center: etapySzlaku[0].coords,
+                zoom: etapySzlaku[0].zoom,
+                pitch: etapySzlaku[0].pitch,
+bearing: etapySzlaku[0].bearing
+});
+map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+map.on('style.load', () => {
+if (!map.getSource('mapbox-dem')) {
+map.addSource('mapbox-dem', {
+'type': 'raster-dem',
+'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+'tileSize': 512,
+'maxzoom': 14
+});
+map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+}
+});
+etapySzlaku.forEach((etap, idx) => {
+if (etap.isIntro) {
+markery.push(null);
+return;
+}
+const el = document.createElement('div');
+el.className = 'sz-pin-wrap';
+el.innerHTML = <button class="sz-pin" style="--pin:${etap.kolor}" aria-label="${etap.tytul}"> ${idx} <span class="sz-pin-label">${etap.tytul}</span> </button>;
+el.addEventListener('click', () => {
+const targetStep = document.querySelector(.sz-step[data-index="${idx}"]);
+if (targetStep) targetStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+new mapboxgl.Marker(el).setLngLat(etap.coords).addTo(map);
+markery.push(el.querySelector('.sz-pin'));
+});
+}
+let aktualnyIndex = -1;
+function aktywujEtap(index) {
+if (index === aktualnyIndex) return;
+aktualnyIndex = index;
+document.querySelectorAll('.sz-step').forEach((s, i) => s.classList.toggle('is-active', i === index));
+markery.forEach((pin, i) => { if (pin) pin.classList.toggle('is-active', i === index); });
+const etap = etapySzlaku[index];
+if (map && etap) {
+map.flyTo({
+center: etap.coords,
+zoom: etap.zoom,
+pitch: etap.pitch,
+bearing: etap.bearing,
+speed: 0.85,
+curve: 1.4,
+essential: true
+});
+}
+}
+const steps = document.querySelectorAll('.sz-step');
+const observer = new IntersectionObserver((entries) => {
+entries.forEach(entry => {
+if (entry.isIntersecting) aktywujEtap(Number(entry.target.dataset.index));
+});
+}, { rootMargin: '-35% 0px -35% 0px', threshold: 0.1 });
+steps.forEach((step, idx) => {
+observer.observe(step);
+step.querySelector('.sz-card').addEventListener('click', () => aktywujEtap(idx));
+});
+window.addEventListener('scroll', () => {
+const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+const progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+document.getElementById('progressBar').style.width = ${progress}%;
+});
+document.getElementById('themeBtn').addEventListener('click', () => {
+const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+if (isLight) {
+document.documentElement.removeAttribute('data-theme');
+localStorage.setItem('bastion-theme', 'dark');
+if (map) map.setStyle('mapbox://styles/mapbox/dark-v11');
+} else {
+document.documentElement.setAttribute('data-theme', 'light');
+localStorage.setItem('bastion-theme', 'light');
+if (map) map.setStyle('mapbox://styles/mapbox/outdoors-v12');
+}
+});
