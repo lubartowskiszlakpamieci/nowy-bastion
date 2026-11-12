@@ -134,15 +134,12 @@
         ⚠️ <strong>Brak tokena Mapbox Studio:</strong> Wklej swój klucz <code>pk.eyJ1...</code> w miejsce <code>TWÓJ_TOKEN_MAPBOX_TUTAJ</code>.
     </div>
 
-    <div id="map"></div>
+       <div id="map"></div>
     <main id="story"></main>
 
     <script src="https://mapbox.com"></script>
     <script>
-        // =====================================================================
-        // TUTAJ WKLEJ SWÓJ TOKEN Z MAPBOX STUDIO (zaczyna się od pk.eyJ1...)
-        // =====================================================================
-        const MAPBOX_TOKEN = 'TWÓJ_TOKEN_MAPBOX_TUTAJ';
+        const MAPBOX_TOKEN = 'pk.eyJ1Ijoic3psYWtwYW1pZWNpIiwicCI6ImNtc2Q2ajQzbTFuYmBycnF5N21xYm94NmI1fQ.onRsmrhonmqffCJGfOnYFg';
 
         const etapySzlaku = [
             {
@@ -318,25 +315,29 @@
                 center: etapySzlaku[0].coords,
                 zoom: etapySzlaku[0].zoom,
                 pitch: etapySzlaku[0].pitch,
-bearing: etapySzlaku[0].bearing
-});
-map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-map.on('style.load', () => {
-if (!map.getSource('mapbox-dem')) {
-map.addSource('mapbox-dem', {
-'type': 'raster-dem',
-'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-'tileSize': 512,
-'maxzoom': 14
-});
-map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-}
-});
-etapySzlaku.forEach((etap, idx) => {
-if (etap.isIntro) {
-markery.push(null);
-return;
-}
+                bearing: etapySzlaku[0].bearing
+            });
+
+            map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+            map.on('style.load', () => {
+                if (!map.getSource('mapbox-dem')) {
+                    map.addSource('mapbox-dem', {
+                        'type': 'raster-dem',
+                        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                        'tileSize': 512,
+                        'maxzoom': 14
+                    });
+                    map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+                }
+            });
+
+            etapySzlaku.forEach((etap, idx) => {
+                if (etap.isIntro) {
+                    markery.push(null);
+                    return;
+                }
+
 const el = document.createElement('div');
 el.className = 'sz-pin-wrap';
 el.innerHTML = <button class="sz-pin" style="--pin:${etap.kolor}" aria-label="${etap.tytul}"> ${idx} <span class="sz-pin-label">${etap.tytul}</span> </button>;
@@ -394,3 +395,6 @@ localStorage.setItem('bastion-theme', 'light');
 if (map) map.setStyle('mapbox://styles/mapbox/outdoors-v12');
 }
 });
+
+
+
