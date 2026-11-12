@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Szlak Mapbox — Bastion Pamięci</title>
+    <meta name="description" content="Interaktywny szlak Uskoka i Wiktora w Lubartowskiem. Przewijaj opisy, a mapa przeleci do kolejnych miejsc.">
+
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Special+Elite&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Zmienne kolorów, czcionki i motyw jasny/ciemny z całego Bastionu -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://mapbox.com">
+
+    <script>
+        (function(){ try { if (localStorage.getItem('bastion-theme') === 'light') document.documentElement.setAttribute('data-theme','light'); } catch(e){} })();
+    </script>
+
+    <style>
+        /* Zabezpieczenie zmiennych na wypadek uruchomienia bez css/style.css */
+        :root {
+            --color-black: #0f0d0c;
+            --color-charcoal: #1a1715;
+            --color-sepia-paper: #e8e0d5;
+            --color-sepia-cream: #d5c7b2;
+            --color-sepia-warm: #a39582;
+            --color-gold: #c5a059;
+            --color-red-accent: #9e2a2b;
+            --border-sepia: 1px solid rgba(197, 160, 89, 0.25);
+            --border-red: 1px solid #9e2a2b;
+            --font-typewriter: 'Special Elite', monospace;
+            --font-mono: 'Courier Prime', monospace;
+            --font-body: 'Libre Baskerville', serif;
+            --shadow-light: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-mid: 0 8px 24px rgba(0,0,0,0.6);
+            --shadow-heavy: 0 12px 32px rgba(0,0,0,0.85);
+            --sz-top: 56px;
+            --sz-side: min(460px, 42vw);
+            --sz-map-h: 42vh;
+        }
+        [data-theme="light"] {
+            --color-black: #f4efe6;
+            --color-charcoal: #ebe3d5;
+            --color-sepia-paper: #1f1b18;
+            --color-sepia-cream: #3b332d;
+            --color-sepia-warm: #6b5e53;
+            --color-gold: #8c6218;
+        }
+
+        html { scroll-behavior: smooth; }
+        body.szlak-page { margin: 0; background: var(--color-black); color: var(--color-sepia-paper); }
+
+        /* ---------- Pasek górny ---------- */
+        .sz-top { position: fixed; top: 0; left: 0; right: 0; height: var(--sz-top); z-index: 1000;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px;
+            background: var(--color-black); border-bottom: var(--border-red); }
+        .sz-back { font-family: var(--font-typewriter); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase;
+            color: var(--color-sepia-paper); text-decoration: none; padding: 8px 14px; border: 1px solid var(--color-gold);
+            transition: background .25s ease, color .25s ease; white-space: nowrap; }
+        .sz-back:hover, .sz-back:focus-visible { background: var(--color-gold); color: var(--color-black); text-decoration: none; }
+        .sz-top-title { font-family: var(--font-typewriter); letter-spacing: .25em; color: var(--color-gold); font-size: .8rem; flex: 1; text-align: center; }
+        .sz-theme-btn { background: transparent; border: 1px solid var(--color-sepia-warm); color: var(--color-sepia-paper);
+            padding: 6px 10px; cursor: pointer; font-family: var(--font-mono); font-size: .8rem; }
+        .sz-bar { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--color-red-accent); transition: width .3s ease; }
+
+        /* ---------- Mapa ---------- */
+        #map { position: fixed; top: var(--sz-top); bottom: 0; left: var(--sz-side); right: 0; z-index: 5; background: var(--color-charcoal); }
+        .sz-notice { position: fixed; z-index: 900; top: calc(var(--sz-top) + 10px); left: calc(var(--sz-side) + 12px); right: 12px;
+            max-width: 560px; padding: 10px 14px; font-family: var(--font-mono); font-size: .78rem; line-height: 1.5;
+            background: var(--color-charcoal); color: var(--color-sepia-paper); border: var(--border-sepia); border-left: 3px solid var(--color-gold);
+            box-shadow: var(--shadow-mid); }
+        .sz-notice[hidden] { display: none; }
+        .mapboxgl-map { font-family: var(--font-mono); }
+
+        /* ---------- Znaczniki ---------- */
+        .sz-pin-wrap { width: 30px; height: 30px; }
+        .sz-pin { position: relative; width: 30px; height: 30px; padding: 0; border-radius: 50%; cursor: pointer;
+            background: var(--pin, #cc0000); color: #fff; border: 2px solid rgba(255,255,255,.92);
+            font: 700 12px/1 var(--font-mono); display: grid; place-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.55); transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease; }
+        .sz-pin:hover { transform: scale(1.18); }
+        .sz-pin.is-active { transform: scale(1.5); box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 4px 14px rgba(0,0,0,.6); z-index: 10; }
+        .sz-pin.is-active::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid var(--pin, #cc0000);
+            animation: szPulse 1.8s ease-out infinite; pointer-events: none; }
+        @keyframes szPulse { 0% { transform: scale(.7); opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
+        .sz-pin-label { position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%) scale(.75);
+            transform-origin: left center; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .35s ease;
+            font: 700 11px/1.2 var(--font-typewriter); letter-spacing: .04em; padding: 5px 9px;
+            background: var(--color-charcoal); color: var(--color-sepia-paper); border: var(--border-sepia); box-shadow: var(--shadow-mid); }
+        .sz-pin.is-active .sz-pin-label { opacity: 1; }
+
+        /* ---------- Opowieść (karty) ---------- */
+        #story { position: relative; z-index: 10; width: var(--sz-side); margin-top: var(--sz-top); padding: 20px 18px 45vh;
+            background: var(--color-black); border-right: var(--border-sepia); box-sizing: border-box; }
+        .sz-step { min-height: 82vh; display: flex; align-items: center; padding: 16px 0; }
+        .sz-card { width: 100%; padding: 22px 22px 20px; background: var(--color-charcoal); border: var(--border-sepia);
+            box-shadow: var(--shadow-light); cursor: pointer; opacity: .35; transform: translateY(18px) scale(.98);
+            transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1), box-shadow .6s ease, border-color .6s ease; }
+        .sz-step.is-active .sz-card { opacity: 1; transform: none; border-color: var(--color-gold); box-shadow: var(--shadow-heavy); }
+        .sz-kicker { display: flex; justify-content: space-between; gap: 10px; font-family: var(--font-mono); font-size: .72rem;
+            letter-spacing: .12em; text-transform: uppercase; color: var(--color-sepia-warm); margin-bottom: 12px; }
+        .sz-type { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em;
+            text-transform: uppercase; color: var(--color-sepia-cream); margin-bottom: 10px; }
+        .sz-type i { width: 10px; height: 10px; border-radius: 50%; background: var(--pin); display: inline-block; flex-shrink: 0; }
+        .sz-title { font-family: var(--font-typewriter); font-weight: 400; font-size: 1.4rem; line-height: 1.25; color: var(--color-sepia-paper); margin: 0 0 10px; }
+        .sz-meta { font-family: var(--font-mono); font-size: .78rem; color: var(--color-sepia-warm); margin-bottom: 14px; line-height: 1.5; }
+        .sz-desc { font-family: var(--font-body); font-size: .92rem; line-height: 1.7; color: var(--color-sepia-paper); }
+        .sz-desc p { margin: 0 0 .8em; }
+        .sz-src { margin-top: 14px; padding-top: 10px; border-top: var(--border-sepia); font-family: var(--font-mono); font-size: .7rem; color: var(--color-sepia-warm); line-height: 1.5; }
+        .sz-hint { margin-top: 16px; font-family: var(--font-mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--color-gold); }
+        .sz-legend { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 6px; font-family: var(--font-mono); font-size: .78rem; }
+        .sz-legend li { display: flex; align-items: center; gap: 9px; color: var(--color-sepia-cream); }
+        .sz-legend i { width: 11px; height: 11px; border-radius: 50%; background: var(--pin); display: inline-block; }
+
+        /* ---------- Dokończona klasa przycisków (.sz-btn) ---------- */
+        .sz-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .sz-btn { font-family: var(--font-typewriter); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase;
+            padding: 9px 14px; border: 1px solid var(--color-gold); background: transparent; color: var(--color-sepia-paper);
+            text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+            transition: background .25s ease, color .25s ease; }
+        .sz-btn:hover { background: var(--color-gold); color: var(--color-black); }
+        .sz-btn-gps { border-color: var(--color-red-accent); background: rgba(158, 42, 43, 0.2); }
+        .sz-btn-gps:hover { background: var(--color-red-accent); color: #fff; }
+
+        /* ---------- Widok mobilny (smartfony) ---------- */
+        @media (max-width: 820px) {
+            #map { left: 0; right: 0; height: var(--sz-map-h); bottom: auto; border-bottom: var(--border-red); }
+            #story { width: 100%; margin-top: calc(var(--sz-top) + var(--sz-map-h)); border-right: none; padding-bottom: 30vh; }
