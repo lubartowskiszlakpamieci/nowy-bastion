@@ -11,7 +11,7 @@
     <link href="https://googleapis.com/css2?family=Special+Elite&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://mapbox.com">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
 
     <script>
         (function(){ try { if (localStorage.getItem('bastion-theme') === 'light') document.documentElement.setAttribute('data-theme','light'); } catch(e){} })();
@@ -134,10 +134,10 @@
         ⚠️ <strong>Brak tokena Mapbox Studio:</strong> Wklej swój klucz <code>pk.eyJ1...</code> w miejsce <code>TWÓJ_TOKEN_MAPBOX_TUTAJ</code>.
     </div>
 
-       <div id="map"></div>
+    <div id="map"></div>
     <main id="story"></main>
 
-    <script src="https://mapbox.com"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
     <script>
         const MAPBOX_TOKEN = 'pk.eyJ1Ijoic3psYWtwYW1pZWNpIiwicCI6ImNtc2Q2ajQzbTFuYmBycnF5N21xYm94NmI1fQ.onRsmrhonmqffCJGfOnYFg';
 
@@ -270,7 +270,8 @@
                     <div class="sz-hint">↓ Przewiń w dół, aby rozpocząć przelot</div>
                 `;
             } else {
-                const googleMapsUrl = `https://google.com{etap.coords[1]},${etap.coords[0]}`;
+                // POPRAWKA 1: Poprawiono szablon stringa (litery zamiast cudzysłowów) dla linku Google Maps
+                const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${etap.coords[1]},${etap.coords[0]}`;
                 przyciskGPS = `
                     <div class="sz-actions">
                         <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="sz-btn sz-btn-gps">
@@ -338,63 +339,73 @@
                     return;
                 }
 
-const el = document.createElement('div');
-el.className = 'sz-pin-wrap';
-el.innerHTML = <button class="sz-pin" style="--pin:${etap.kolor}" aria-label="${etap.tytul}"> ${idx} <span class="sz-pin-label">${etap.tytul}</span> </button>;
-el.addEventListener('click', () => {
-const targetStep = document.querySelector(.sz-step[data-index="${idx}"]);
-if (targetStep) targetStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
-});
-new mapboxgl.Marker(el).setLngLat(etap.coords).addTo(map);
-markery.push(el.querySelector('.sz-pin'));
-});
-}
-let aktualnyIndex = -1;
-function aktywujEtap(index) {
-if (index === aktualnyIndex) return;
-aktualnyIndex = index;
-document.querySelectorAll('.sz-step').forEach((s, i) => s.classList.toggle('is-active', i === index));
-markery.forEach((pin, i) => { if (pin) pin.classList.toggle('is-active', i === index); });
-const etap = etapySzlaku[index];
-if (map && etap) {
-map.flyTo({
-center: etap.coords,
-zoom: etap.zoom,
-pitch: etap.pitch,
-bearing: etap.bearing,
-speed: 0.85,
-curve: 1.4,
-essential: true
-});
-}
-}
-const steps = document.querySelectorAll('.sz-step');
-const observer = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting) aktywujEtap(Number(entry.target.dataset.index));
-});
-}, { rootMargin: '-35% 0px -35% 0px', threshold: 0.1 });
-steps.forEach((step, idx) => {
-observer.observe(step);
-step.querySelector('.sz-card').addEventListener('click', () => aktywujEtap(idx));
-});
-window.addEventListener('scroll', () => {
-const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-const progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
-document.getElementById('progressBar').style.width = ${progress}%;
-});
-document.getElementById('themeBtn').addEventListener('click', () => {
-const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-if (isLight) {
-document.documentElement.removeAttribute('data-theme');
-localStorage.setItem('bastion-theme', 'dark');
-if (map) map.setStyle('mapbox://styles/mapbox/dark-v11');
-} else {
-document.documentElement.setAttribute('data-theme', 'light');
-localStorage.setItem('bastion-theme', 'light');
-if (map) map.setStyle('mapbox://styles/mapbox/outdoors-v12');
-}
-});
+                const el = document.createElement('div');
+                el.className = 'sz-pin-wrap';
+                // POPRAWKA 2: Użyto backticków (``) zamiast cudzysłowów przy tworzeniu elementu HTML pinezki
+                el.innerHTML = `<button class="sz-pin" style="--pin:${etap.kolor}" aria-label="${etap.tytul}">${idx}<span class="sz-pin-label">${etap.tytul}</span></button>`;
+                
+                el.addEventListener('click', () => {
+                    // POPRAWKA 3: Dodano poprawny selektor w zapytaniu querySelector z cudzysłowem
+                    const targetStep = document.querySelector(`.sz-step[data-index="${idx}"]`);
+                    if (targetStep) targetStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+                
+                new mapboxgl.Marker(el).setLngLat(etap.coords).addTo(map);
+                markery.push(el.querySelector('.sz-pin'));
+            });
+        }
 
+        let aktualnyIndex = -1;
+        function aktywujEtap(index) {
+            if (index === aktualnyIndex) return;
+            aktualnyIndex = index;
+            document.querySelectorAll('.sz-step').forEach((s, i) => s.classList.toggle('is-active', i === index));
+            markery.forEach((pin, i) => { if (pin) pin.classList.toggle('is-active', i === index); });
+            const etap = etapySzlaku[index];
+            if (map && etap) {
+                map.flyTo({
+                    center: etap.coords,
+                    zoom: etap.zoom,
+                    pitch: etap.pitch,
+                    bearing: etap.bearing,
+                    speed: 0.85,
+                    curve: 1.4,
+                    essential: true
+                });
+            }
+        }
 
+        const steps = document.querySelectorAll('.sz-step');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) aktywujEtap(Number(entry.target.dataset.index));
+            });
+        }, { rootMargin: '-35% 0px -35% 0px', threshold: 0.1 });
 
+        steps.forEach((step, idx) => {
+            observer.observe(step);
+            step.querySelector('.sz-card').addEventListener('click', () => aktywujEtap(idx));
+        });
+
+        window.addEventListener('scroll', () => {
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+            // POPRAWKA 4: Poprawiono formatowanie stringa paska postępu na backticki
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        });
+
+        document.getElementById('themeBtn').addEventListener('click', () => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            if (isLight) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('bastion-theme', 'dark');
+                if (map) map.setStyle('mapbox://styles/mapbox/dark-v11');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('bastion-theme', 'light');
+                if (map) map.setStyle('mapbox://styles/mapbox/outdoors-v12');
+            }
+        });
+    </script>
+</body>
+</html>
